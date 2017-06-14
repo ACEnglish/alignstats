@@ -538,9 +538,8 @@ int main(int argc, char **argv)
     /* Load targets for capture stats */
     if (args->do_capture) {
         /* Setup capture stats metrics */
-        args->cm = capture_metrics_init();
-        args->ci = coverage_info_init();
         args->ti = bed_init();
+        args->ci = coverage_info_init();
 
         if (args->verbose) {
             log_info("Loading targets...");
@@ -554,6 +553,8 @@ int main(int argc, char **argv)
             if (args->verbose) {
                 log_info("Targets loaded successfully.");
             }
+            /* Can't populate targets info until we've got it loaded */
+            args->cm = capture_metrics_init(args->ti);
             args->cm->t_total = args->ti->num_targets;
         }
 
@@ -586,7 +587,8 @@ int main(int argc, char **argv)
     }
 
     if (args->do_wgs) {
-        args->cm_wgs = capture_metrics_init();
+        //blank bed...?
+        args->cm_wgs = capture_metrics_init(bed_init());
         args->cm_wgs->b_masked = bed_sum_bases(args->cov_mask_ti);
         args->ci_wgs = coverage_info_init();
     }
