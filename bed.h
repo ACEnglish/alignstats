@@ -21,6 +21,7 @@ bed_chrom_t *bed_chrom_init(size_t count);
 void bed_chrom_destroy(bed_chrom_t *tic);
 
 struct bed {
+    char **chrom_names;
     size_t num_targets;
     size_t num_chroms;
     bed_chrom_t **chroms;

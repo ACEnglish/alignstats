@@ -6,12 +6,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 /**
  * Capture and whole genome statistics
  */
 
 /* Target_Coverage helpers */
+char* base_cov_to_str(uint32_t *coverage) {
+    size_t length = sizeof(coverage)/sizeof(coverage[0]);
+    log_warning("Length %zu", length);
+    size_t cur_int_buffer = 20;
+    size_t cur_buffer_pos = 0;
+    size_t buffer_length = length;
+    char *ret = calloc(length, sizeof(char));
+
+    for (size_t i = 0 ; i < length; i++)
+    {
+        if ((cur_buffer_pos + cur_int_buffer) > buffer_length) {
+            char* new_str = (char*) malloc(strlen(ret) * sizeof(char) * 2);
+            strcpy(new_str, ret);
+            ret = new_str;
+            buffer_length = sizeof(ret)/sizeof(ret[0]);
+        }
+        snprintf(ret + cur_buffer_pos, cur_int_buffer+1, "%d,", coverage[i]);
+        cur_buffer_pos += cur_int_buffer + 1;
+    }
+    return ret;
+}
+
 target_coverage_block_t *target_coverage_block_init(size_t target_count) {
     target_coverage_block_t *my_block = calloc(1, sizeof(target_coverage_block_t));
     die_on_alloc_fail(my_block);
@@ -21,6 +44,14 @@ target_coverage_block_t *target_coverage_block_init(size_t target_count) {
     my_block->end_pos = calloc(target_count, sizeof(uint32_t));
     my_block->mean = NULL;
     my_block->mean = calloc(target_count, sizeof(float));
+    my_block->min = NULL;
+    my_block->min = calloc(target_count, sizeof(uint32_t));
+    my_block->cov_lt5 = NULL;
+    my_block->cov_lt5 = calloc(target_count, sizeof(uint32_t));
+    my_block->cov_lt10 = NULL;
+    my_block->cov_lt10 = calloc(target_count, sizeof(uint32_t));
+    my_block->cov_lt20 = NULL;
+    my_block->cov_lt20 = calloc(target_count, sizeof(uint32_t));
     my_block->base_coverage = NULL; 
     my_block->base_coverage = (uint32_t**) calloc(target_count, sizeof(uint32_t*));
     die_on_alloc_fail(my_block->base_coverage);
@@ -76,6 +107,7 @@ capture_metrics_t *capture_metrics_init(bed_t *target_design)
 {
     capture_metrics_t *cm = calloc(1, sizeof(capture_metrics_t));
     cm->t_target_cov = target_coverage_init(target_design->num_chroms);
+    cm->t_target_cov->chrom_names = target_design->chrom_names;
     
     // For every chrom in target_design and every target per chrom, initialize the object
     for (int cur_chrom = 0; cur_chrom < target_design->num_chroms; cur_chrom++) {
@@ -199,18 +231,35 @@ void handle_target_coverage(const uint32_t *coverage, capture_metrics_t *cm,
     uint32_t cov;
     int32_t start, end, j, buffer_end;
     bed_chrom_t *tic = ti->chroms[chrom_idx];
-    /* Here English */
-    // ti->num_targets -- how many overall targets there are.
+    
+    target_coverage_block_t *cur_chrom_cov = cm->t_target_cov->chroms[chrom_idx];
     /* for each target */
-    for (size_t i = 0; i < tic->num_targets; ++i) {
-        start = tic->start_pos[i];
-        end = tic->end_pos[i];
+    for (size_t tgt_idx = 0; tgt_idx < tic->num_targets; ++tgt_idx) {
+        start = tic->start_pos[tgt_idx];
+        end = tic->end_pos[tgt_idx];
         target_hit = false;
-
+        uint32_t *cur_target_cov = cur_chrom_cov->base_coverage[tgt_idx];
+        float sum_cov = 0;
+        uint32_t min_cov = UINT_MAX;
         /* for each base position */
         for (int32_t j = start; j <= end; ++j) {
             cov = coverage[j];
-
+            /* Copy coverage over */
+            cur_target_cov[j - start] = cov;
+            sum_cov += cov;
+            if (cov < min_cov) {
+                min_cov = cov;
+            }
+            
+            if (cov < 20) {
+                ++cur_chrom_cov->cov_lt20[tgt_idx];
+                if (cov < 10) {
+                    ++cur_chrom_cov->cov_lt10[tgt_idx];
+                    if (cov < 5) {
+                        ++cur_chrom_cov->cov_lt5[tgt_idx];
+                    
+            } } } 
+            
             /* Bases with coverage of at least 1, 10, 20, etc. */
             if (cov >= 1) {
                 ++cm->b_1_plus_hits;
@@ -236,7 +285,10 @@ void handle_target_coverage(const uint32_t *coverage, capture_metrics_t *cm,
             incr_cov_histo(ci, cov);
             cm->c_total += cov;
         }
-
+        //And record average
+        cur_chrom_cov->mean[tgt_idx] = sum_cov / (end - start);
+        cur_chrom_cov->min[tgt_idx] = min_cov;
+        
         if (target_hit) {
             ++cm->t_hit;
         } else {
@@ -808,19 +860,25 @@ void capture_report(report_t *report, capture_metrics_t *cm, bed_t *ti)
         report_add_key_value(report, key_buffer, value_buffer);
         
         //For each target - Report coverage
-        copy_to_buffer(key_start, "Region_Header", copy_size);
-        snprintf(value_buffer, REPORT_BUFFER_SIZE, "name mean_cov base_cov");
+        copy_to_buffer(key_start, "Target_Coverage_Header", copy_size);
+        snprintf(value_buffer, REPORT_BUFFER_SIZE, "chrom start end mean_cov min_cov cov_lt5 cov_lt10 cov_lt20");
         report_add_key_value(report, key_buffer, value_buffer);
         for(int i = 0; i < ti->num_chroms; i++) {
             for (int j = 0; j < ti->chroms[i]->num_targets; j++) {
-                copy_to_buffer(key_start, "Region", copy_size);
-                //coverage over each base
-                //for i in fake...
-                //snprintf(value_buffer, REPORT_BUFFER_SIZE, print_target_cov(cm->t_target_cov->chroms[i], j, "chrname"));
-                //this doesn't work... I'll have to figure something else out
-                snprintf(value_buffer, REPORT_BUFFER_SIZE, "fake 1");
-                snprintf(value_buffer, REPORT_BUFFER_SIZE, "fake 2");
+                copy_to_buffer(key_start, "Target_Coverage", copy_size);
+                snprintf(value_buffer, REPORT_BUFFER_SIZE, "%s %u %u %.2f %u %u %u %u", 
+                         cm->t_target_cov->chrom_names[i],
+                         cm->t_target_cov->chroms[i]->start_pos[j],
+                         cm->t_target_cov->chroms[i]->end_pos[j],
+                         cm->t_target_cov->chroms[i]->mean[j],
+                         cm->t_target_cov->chroms[i]->min[j], 
+                         cm->t_target_cov->chroms[i]->cov_lt5[j], 
+                         cm->t_target_cov->chroms[i]->cov_lt10[j], 
+                         cm->t_target_cov->chroms[i]->cov_lt20[j]);
                 report_add_key_value(report, key_buffer, value_buffer);
+                
+                //need a way to output the base_coverage metrics...
+                // base_cov_to_str(cm->t_target_cov->chroms[i]->base_coverage[j]));
             }
         }
     }

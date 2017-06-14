@@ -55,7 +55,7 @@ bed_t *bed_init()
     die_on_alloc_fail(ti);
 
     ti->chroms = NULL;
-
+    ti->chrom_names = NULL;
     return ti;
 }
 
@@ -119,6 +119,7 @@ size_t load_bed(FILE *fp, bed_t *ti, bam_hdr_t *hdr)
     ti->num_chroms = hdr->n_targets;
     ti->chroms = malloc(((size_t)hdr->n_targets * sizeof(bed_chrom_t *)));
     die_on_alloc_fail(ti->chroms);
+    ti->chrom_names = hdr->target_name;
 
     char *chrom_buffer, *num_buffer;
     char *c_start, *c_end;
