@@ -21,6 +21,23 @@ struct coverage_info {
 };
 typedef struct coverage_info coverage_info_t;
 
+/* Target Coverage Info */
+struct target_coverage_block {
+	uint32_t *start_pos;
+	uint32_t *end_pos;
+	float *mean;
+	uint32_t **base_coverage;
+};
+typedef struct target_coverage_block target_coverage_block_t;
+target_coverage_block_t *target_coverage_block_init(size_t target_count);
+
+struct target_coverage {
+	char *name; // Identifier of the region.. don't exist, yet
+	target_coverage_block_t **chroms;
+};
+typedef struct target_coverage target_coverage_t;
+target_coverage_t *target_coverage_init(uint32_t span);
+
 coverage_info_t *coverage_info_init();
 void coverage_info_destroy(coverage_info_t *ci);
 
@@ -61,7 +78,9 @@ struct capture_metrics {
                              * coverage at one or more base positions.
                              */
     uint64_t t_non_target_good_hits;
-
+	target_coverage_t *t_target_cov; /* Coverage Per-Target (same structure as bed_t with bed_chrom_t inside) */
+	
+	
     /* Coverage info */
     uint64_t c_total;  /* Sum of target coverage values (for median, average) */
     uint64_t c_median; /* Median target coverage */

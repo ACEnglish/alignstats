@@ -11,6 +11,34 @@
  * Capture and whole genome statistics
  */
 
+/* Target_Coverage helpers */
+target_coverage_block_t *target_coverage_block_init(size_t target_count) {
+    target_coverage_block_t *my_block = calloc(1, sizeof(target_coverage_block_t));
+    die_on_alloc_fail(my_block);
+    my_block->start_pos = NULL;
+    my_block->start_pos = calloc(target_count, sizeof(uint32_t));
+    my_block->end_pos = NULL;
+    my_block->end_pos = calloc(target_count, sizeof(uint32_t));
+    my_block->mean = NULL;
+    my_block->mean = calloc(target_count, sizeof(float));
+    my_block->base_coverage = NULL; 
+    my_block->base_coverage = (uint32_t**) calloc(target_count, sizeof(uint32_t*));
+    die_on_alloc_fail(my_block->base_coverage);
+
+    return my_block;
+}
+
+target_coverage_t *target_coverage_init(uint32_t chrom_count) { 
+    target_coverage_t *my_target = calloc(1, sizeof(target_coverage_t));
+    die_on_alloc_fail(my_target);
+    my_target->chroms = NULL;
+    my_target->chroms = calloc(chrom_count, sizeof(target_coverage_block_t));
+    die_on_alloc_fail(my_target->chroms);
+
+    return my_target;
+}
+ 
+
 /* Coverage info structure */
 
 /**
@@ -44,9 +72,24 @@ void coverage_info_destroy(coverage_info_t *ci)
 /**
  * Create and return new *capture_metrics_t.
  */
-capture_metrics_t *capture_metrics_init()
+capture_metrics_t *capture_metrics_init(bed_t *target_design)
 {
     capture_metrics_t *cm = calloc(1, sizeof(capture_metrics_t));
+    cm->t_target_cov = target_coverage_init(target_design->num_chroms);
+    
+    // For every chrom in target_design and every target per chrom, initialize the object
+    for (int cur_chrom = 0; cur_chrom < target_design->num_chroms; cur_chrom++) {
+        bed_chrom_t *cur_chrom_bed = target_design->chroms[cur_chrom];
+        cm->t_target_cov->chroms[cur_chrom] = target_coverage_block_init(cur_chrom_bed->num_targets);
+        for (int chrom_target = 0; chrom_target < cur_chrom_bed->num_targets; chrom_target++) {
+            //off by one?
+            cm->t_target_cov->chroms[cur_chrom]->start_pos[chrom_target] = cur_chrom_bed->start_pos[chrom_target];
+            cm->t_target_cov->chroms[cur_chrom]->end_pos[chrom_target] = cur_chrom_bed->end_pos[chrom_target];
+            size_t span = cur_chrom_bed->end_pos[chrom_target] - cur_chrom_bed->start_pos[chrom_target];
+            cm->t_target_cov->chroms[cur_chrom]->base_coverage[chrom_target] = calloc(span, sizeof(uint32_t));
+        }
+    }
+    
     die_on_alloc_fail(cm);
 
     return cm;
@@ -156,7 +199,8 @@ void handle_target_coverage(const uint32_t *coverage, capture_metrics_t *cm,
     uint32_t cov;
     int32_t start, end, j, buffer_end;
     bed_chrom_t *tic = ti->chroms[chrom_idx];
-
+    /* Here English */
+    // ti->num_targets -- how many overall targets there are.
     /* for each target */
     for (size_t i = 0; i < tic->num_targets; ++i) {
         start = tic->start_pos[i];
@@ -305,7 +349,7 @@ void handle_coverage_mask_target(uint8_t *target_cov, capture_metrics_t *cm,
     uint8_t *curr_pos, *end_pos;
     int32_t start, end;
     bed_chrom_t *tic;
-
+    
     if (cov_mask_ti->num_targets > 0) {
         tic = cov_mask_ti->chroms[chrom_idx];
 
@@ -762,6 +806,23 @@ void capture_report(report_t *report, capture_metrics_t *cm, bed_t *ti)
         copy_to_buffer(key_start, "Reads_On_Target_Or_Buffer_Pct", copy_size);
         print_pct(value_buffer, REPORT_BUFFER_SIZE, cm->r_in_target + cm->r_in_buffer, cm->r_aligned);
         report_add_key_value(report, key_buffer, value_buffer);
+        
+        //For each target - Report coverage
+        copy_to_buffer(key_start, "Region_Header", copy_size);
+        snprintf(value_buffer, REPORT_BUFFER_SIZE, "name mean_cov base_cov");
+        report_add_key_value(report, key_buffer, value_buffer);
+        for(int i = 0; i < ti->num_chroms; i++) {
+            for (int j = 0; j < ti->chroms[i]->num_targets; j++) {
+                copy_to_buffer(key_start, "Region", copy_size);
+                //coverage over each base
+                //for i in fake...
+                //snprintf(value_buffer, REPORT_BUFFER_SIZE, print_target_cov(cm->t_target_cov->chroms[i], j, "chrname"));
+                //this doesn't work... I'll have to figure something else out
+                snprintf(value_buffer, REPORT_BUFFER_SIZE, "fake 1");
+                snprintf(value_buffer, REPORT_BUFFER_SIZE, "fake 2");
+                report_add_key_value(report, key_buffer, value_buffer);
+            }
+        }
     }
 
     free(key_buffer);
