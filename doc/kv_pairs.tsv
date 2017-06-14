@@ -183,3 +183,5 @@ Cap_Bases_On_Target	Integer	Capture Metrics	Number of bases within target region
 Cap_Bases_On_Buffer	Integer	Capture Metrics	Number of bases within target buffer regions but outside of target regions
 Cap_Reads_On_Target_Or_Buffer	Integer	Capture Metrics	Number of reads captured by either target regions or target buffer regions
 Cap_Reads_On_Target_Or_Buffer_Pct	Float	Capture Metrics	Reads captured by either target regions or target buffer regions as percentage of aligned reads
+Cap_Target_Coverage_Header	String	Capture Metrics	Space delimited header of Cap_Target_Coverage keys
+Cap_Target_Coverage	String	Capture Metrics	Space delimited values of per-target coverage stats

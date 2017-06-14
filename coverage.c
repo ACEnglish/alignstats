@@ -14,8 +14,8 @@
 
 /* Target_Coverage helpers */
 char* base_cov_to_str(uint32_t *coverage) {
+    //Currently an unused function.
     size_t length = sizeof(coverage)/sizeof(coverage[0]);
-    log_warning("Length %zu", length);
     size_t cur_int_buffer = 20;
     size_t cur_buffer_pos = 0;
     size_t buffer_length = length;
@@ -35,6 +35,9 @@ char* base_cov_to_str(uint32_t *coverage) {
     return ret;
 }
 
+/**
+ * Create and return new *target_coverage objects
+ */
 target_coverage_block_t *target_coverage_block_init(size_t target_count) {
     target_coverage_block_t *my_block = calloc(1, sizeof(target_coverage_block_t));
     die_on_alloc_fail(my_block);

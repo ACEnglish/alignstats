@@ -194,4 +194,6 @@ table, th, td {
 <tr><td>Cap_Bases_On_Buffer</td><td>Integer</td><td>Capture Metrics</td><td>Number of bases within target buffer regions but outside of target regions</td></tr>
 <tr><td>Cap_Reads_On_Target_Or_Buffer</td><td>Integer</td><td>Capture Metrics</td><td>Number of reads captured by either target regions or target buffer regions</td></tr>
 <tr><td>Cap_Reads_On_Target_Or_Buffer_Pct</td><td>Float</td><td>Capture Metrics</td><td>Reads captured by either target regions or target buffer regions as percentage of aligned reads</td></tr>
+<tr><td>Cap_Target_Coverage_Header</td><td>String</td><td>Capture Metrics</td><td>Space delimited header of Cap_Target_Coverage keys</td></tr>
+<tr><td>Cap_Target_Coverage</td><td>String</td><td>Capture Metrics</td><td>Space delimited values of per-target coverage stats</td></tr>
 </table>
