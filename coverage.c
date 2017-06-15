@@ -109,6 +109,7 @@ void coverage_info_destroy(coverage_info_t *ci)
 capture_metrics_t *capture_metrics_init(bed_t *target_design)
 {
     capture_metrics_t *cm = calloc(1, sizeof(capture_metrics_t));
+    cm->t_total = target_design->num_targets;
     cm->t_target_cov = target_coverage_init(target_design->num_chroms);
     cm->t_target_cov->chrom_names = target_design->chrom_names;
     
@@ -542,7 +543,7 @@ void _capture_process_record2(bam1_t *rec, capture_metrics_t *cm,
     switch (target_status) {
     case TARGET_IN:
         ++cm->r_in_target;
-        //++cm->b_in_target;
+        cm->b_on_target += rec->core.l_qseq;
         if (rec->core.qual >= 20) {
             ++cm->r_in_target_mapq20;
             cm->b_in_target_mapq20 += rec->core.l_qseq;
@@ -831,6 +832,14 @@ void capture_report(report_t *report, capture_metrics_t *cm, bed_t *ti)
         print_pct(value_buffer, REPORT_BUFFER_SIZE, cm->r_in_target, cm->r_aligned);
         report_add_key_value(report, key_buffer, value_buffer);
         
+        copy_to_buffer(key_start, "Target_Aligned_Bases", copy_size);
+        snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->b_on_target);
+        report_add_key_value(report, key_buffer, value_buffer);
+
+        copy_to_buffer(key_start, "Target_Aligned_Bases_Pct", copy_size);
+        print_pct(value_buffer, REPORT_BUFFER_SIZE, cm->b_on_target, cm->b_aligned);
+        report_add_key_value(report, key_buffer, value_buffer);
+
         copy_to_buffer(key_start, "Target_MAPQ20_Reads", copy_size);
         snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->r_in_target_mapq20);
         report_add_key_value(report, key_buffer, value_buffer);
@@ -838,7 +847,15 @@ void capture_report(report_t *report, capture_metrics_t *cm, bed_t *ti)
         copy_to_buffer(key_start, "Target_MAPQ20_Reads_Pct", copy_size);
         print_pct(value_buffer, REPORT_BUFFER_SIZE, cm->r_in_target_mapq20, cm->r_aligned);
         report_add_key_value(report, key_buffer, value_buffer);
-
+        
+        copy_to_buffer(key_start, "Target_MAPQ20_Bases", copy_size);
+        snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->b_in_target_mapq20);
+        report_add_key_value(report, key_buffer, value_buffer);
+        
+        copy_to_buffer(key_start, "Target_MAPQ20_Bases_Pct", copy_size);
+        print_pct(value_buffer, REPORT_BUFFER_SIZE, cm->b_in_target_mapq20, cm->b_on_target);
+        report_add_key_value(report, key_buffer, value_buffer);       
+        
         copy_to_buffer(key_start, "Targets_Hit", copy_size);
         snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->t_hit);
         report_add_key_value(report, key_buffer, value_buffer);
@@ -867,13 +884,7 @@ void capture_report(report_t *report, capture_metrics_t *cm, bed_t *ti)
         snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->b_targeted);
         report_add_key_value(report, key_buffer, value_buffer);
         
-        copy_to_buffer(key_start, "Q20_Bases_On_Target", copy_size);
-        snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->b_in_target_mapq20);
-        report_add_key_value(report, key_buffer, value_buffer);
-        
-        copy_to_buffer(key_start, "Q20_Bases_On_Target_Pct", copy_size);
-        print_pct(value_buffer, REPORT_BUFFER_SIZE, cm->b_in_target_mapq20, cm->b_targeted);
-        report_add_key_value(report, key_buffer, value_buffer);       
+
         
         copy_to_buffer(key_start, "Bases_On_Buffer", copy_size);
         snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->b_buffer);
