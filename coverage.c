@@ -396,6 +396,8 @@ void handle_coverage_mask(uint32_t *coverage, bed_t *cov_mask_ti,
 
 /**
  * Erase target regions overlapping masked regions
+ * Note - Cap_Q20_Bases cannot be masked, so if there's overlap between the mask
+ * and target, Cap_Q20_Bases will be inflated
  */
 void handle_coverage_mask_target(uint8_t *target_cov, capture_metrics_t *cm,
                                  bed_t *cov_mask_ti, int32_t chrom_idx,
@@ -540,6 +542,11 @@ void _capture_process_record2(bam1_t *rec, capture_metrics_t *cm,
     switch (target_status) {
     case TARGET_IN:
         ++cm->r_in_target;
+        //++cm->b_in_target;
+        if (rec->core.qual >= 20) {
+            ++cm->r_in_target_mapq20;
+            cm->b_in_target_mapq20 += rec->core.l_qseq;
+        }
         break;
     case TARGET_BUFFER:
         ++cm->r_in_buffer;
@@ -713,7 +720,9 @@ void capture_report(report_t *report, capture_metrics_t *cm, bed_t *ti)
     copy_to_buffer(key_start, "Aligned_Reads_Pct", copy_size);
     print_pct(value_buffer, REPORT_BUFFER_SIZE, cm->r_aligned, cm->r_total);
     report_add_key_value(report, key_buffer, value_buffer);
+    
 
+    
     copy_to_buffer(key_start, "Reads_Paired", copy_size);
     snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->r_paired);
     report_add_key_value(report, key_buffer, value_buffer);
@@ -821,6 +830,14 @@ void capture_report(report_t *report, capture_metrics_t *cm, bed_t *ti)
         copy_to_buffer(key_start, "Target_Aligned_Reads_Pct", copy_size);
         print_pct(value_buffer, REPORT_BUFFER_SIZE, cm->r_in_target, cm->r_aligned);
         report_add_key_value(report, key_buffer, value_buffer);
+        
+        copy_to_buffer(key_start, "Target_MAPQ20_Reads", copy_size);
+        snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->r_in_target_mapq20);
+        report_add_key_value(report, key_buffer, value_buffer);
+
+        copy_to_buffer(key_start, "Target_MAPQ20_Reads_Pct", copy_size);
+        print_pct(value_buffer, REPORT_BUFFER_SIZE, cm->r_in_target_mapq20, cm->r_aligned);
+        report_add_key_value(report, key_buffer, value_buffer);
 
         copy_to_buffer(key_start, "Targets_Hit", copy_size);
         snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->t_hit);
@@ -849,7 +866,15 @@ void capture_report(report_t *report, capture_metrics_t *cm, bed_t *ti)
         copy_to_buffer(key_start, "Bases_On_Target", copy_size);
         snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->b_targeted);
         report_add_key_value(report, key_buffer, value_buffer);
-
+        
+        copy_to_buffer(key_start, "Q20_Bases_On_Target", copy_size);
+        snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->b_in_target_mapq20);
+        report_add_key_value(report, key_buffer, value_buffer);
+        
+        copy_to_buffer(key_start, "Q20_Bases_On_Target_Pct", copy_size);
+        print_pct(value_buffer, REPORT_BUFFER_SIZE, cm->b_in_target_mapq20, cm->b_targeted);
+        report_add_key_value(report, key_buffer, value_buffer);       
+        
         copy_to_buffer(key_start, "Bases_On_Buffer", copy_size);
         snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", cm->b_buffer);
         report_add_key_value(report, key_buffer, value_buffer);

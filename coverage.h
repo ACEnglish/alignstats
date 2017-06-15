@@ -56,6 +56,7 @@ struct capture_metrics {
     uint64_t r_paired_w_mate; /* Paired reads with mate pair mapped */
     uint64_t r_dup;           /* Duplicate reads */
     uint64_t r_in_target;     /* Reads mapped in a target region */
+    uint64_t r_in_target_mapq20;     /* Reads mapped in a target region MAPQ20 */
     uint64_t r_in_buffer;     /* Reads mapped only in a target's buffer */
     uint64_t r_out_target;    /* Reads not mapped to a target or buffer */
 
@@ -63,6 +64,7 @@ struct capture_metrics {
     uint64_t b_total;          /* Total bases */
     uint64_t b_aligned;        /* Aligned bases */
     uint64_t b_targeted;       /* Bases in target regions */
+    uint64_t b_in_target_mapq20;     /* Bases aligned in a target region MAPQ20 */
     uint64_t b_buffer;         /* Bases in target buffers */
     uint64_t b_masked;         /* Masked bases */
     uint64_t b_1_plus_hits;    /* Target bases with >= 1X coverage */

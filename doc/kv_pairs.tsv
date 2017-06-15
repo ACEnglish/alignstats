@@ -31,6 +31,8 @@ Perfect_Reads	Integer	Aligment Statistics	Number of aligned reads without any mi
 Perfect_Reads_Pct	Float	Aligment Statistics	Aligned reads without any mismatches, insertions, or deletions as percentage of Mapped_Reads
 Perfect_Bases	Integer	Aligment Statistics	Sum of bases in Perfect_Bases
 Perfect_Bases_Pct	Float	Aligment Statistics	Bases in Perfect_Bases as percentage of Mapped_Bases
+MAPQ20_Reads    Integer Number of reads with MAPQ >= 20 (less than 1/100 chance of wrong alignment)
+MAPQ20_Reads_Pct    Float   Percent of reads with MAPQ >= 20 as percentage of Mapped_Reads
 Q20_Bases	Integer	Aligment Statistics	Number of bases with quality scores of at least 20
 Q20_Bases_Pct	Float	Aligment Statistics	Bases with quality scores of at least 20 as percentage of Aligned_Bases
 R1_Yield_Reads	Integer	Aligment Statistics	Total number of reads for R1
@@ -173,6 +175,8 @@ Cap_Buffer_Aligned_Reads	Integer	Capture Metrics	Number of aligned reads in buff
 Cap_Buffer_Aligned_Reads_Pct	Float	Capture Metrics	Number of aligned reads in buffer regions but not in target regions as percentage of aligned reads
 Cap_Target_Aligned_Reads	Integer	Capture Metrics	Number of aligned reads in target regions
 Cap_Target_Aligned_Reads_Pct	Float	Capture Metrics	Aligned reads in target regions as percentage of aligned reads
+Cap_Target_MAPQ20_Reads Integer Number of reads on target with MAPQ >= 20 (less than 1/100 chance of wrong alignment)
+Cap_Target_MAPQ20_Reads Float   Percent of reads on target with MAPQ >= 20 as percentage of Aligned_Reads
 Cap_Targets_Hit	Integer	Capture Metrics	Number of targets capturing at least one aligned read
 Cap_Targets_Hit_Pct	Float	Capture Metrics	Targets capturing at least one aligned read as percentage of total targets
 Cap_Target_Buffers_Hit	Integer	Capture Metrics	Number of targets not capturing any reads whose buffer regions capture at least one alinged read
@@ -180,6 +184,8 @@ Cap_Target_Buffers_Hit_Pct	Float	Capture Metrics	Targets not capturing any reads
 Cap_Total_Targets	Integer	Capture Metrics	Total number of targets from capture file
 Cap_High_Coverage_Non_Target_Hits	Integer	Capture Metrics	Number of contiguous regions of coverage outside of target regions or target buffer regions with coverage of at least 20 for at least one base
 Cap_Bases_On_Target	Integer	Capture Metrics	Number of bases within target regions
+Cap_Q20_Bases_On_Target	Integer	Capture Metrics Number of Q20 bases within target regions - note: reads' bases aligning to masked and target are not masked
+Cap_Q20_Bases_On_Target_Pct	Float	Capture Metrics percentage of Q20 bases within target regions over Cap_Bases_On_Target
 Cap_Bases_On_Buffer	Integer	Capture Metrics	Number of bases within target buffer regions but outside of target regions
 Cap_Reads_On_Target_Or_Buffer	Integer	Capture Metrics	Number of reads captured by either target regions or target buffer regions
 Cap_Reads_On_Target_Or_Buffer_Pct	Float	Capture Metrics	Reads captured by either target regions or target buffer regions as percentage of aligned reads
