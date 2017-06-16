@@ -114,7 +114,7 @@ int _get_chrom_idx(char **chrom_names, char *chrom_buffer, int32_t n_targets)
  * Load targets file. Header lines and improperly formatted lines are ignored.
  * Returns number of targets loaded.
  */
-size_t load_bed(FILE *fp, bed_t *ti, bam_hdr_t *hdr)
+size_t load_bed(FILE *fp, bed_t *ti, bam_hdr_t *hdr, bool zero_based)
 {
     ti->num_chroms = hdr->n_targets;
     ti->chroms = malloc(((size_t)hdr->n_targets * sizeof(bed_chrom_t *)));
@@ -182,7 +182,12 @@ size_t load_bed(FILE *fp, bed_t *ti, bam_hdr_t *hdr)
         {
             continue;
         }
-
+        
+        if (zero_based) {
+            start -= 1;
+            end -= 1;
+        }
+        
         if (start < 0) {
             log_warning("BED start coordinate less than minimum allowed: %d < 0", start);
             start = 0;

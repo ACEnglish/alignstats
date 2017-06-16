@@ -31,6 +31,6 @@ typedef struct bed bed_t;
 bed_t *bed_init();
 uint32_t bed_sum_bases(bed_t *ti);
 void bed_destroy(bed_t *ti);
-size_t load_bed(FILE *fp, bed_t *ti, bam_hdr_t *hdr);
+size_t load_bed(FILE *fp, bed_t *ti, bam_hdr_t *hdr, bool zero_based);
 
 #endif /* _BED_H */

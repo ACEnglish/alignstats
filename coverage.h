@@ -64,7 +64,7 @@ struct capture_metrics {
     uint64_t b_total;          /* Total bases */
     uint64_t b_aligned;        /* Aligned bases */
     uint64_t b_targeted;       /* Bases in target regions */
-	uint64_t b_on_target;      /* Bases in reads mapped on target */
+    uint64_t b_on_target;      /* Bases in reads mapped on target */
     uint64_t b_in_target_mapq20;     /* Bases aligned in a target region MAPQ20 */
     uint64_t b_buffer;         /* Bases in target buffers */
     uint64_t b_masked;         /* Masked bases */

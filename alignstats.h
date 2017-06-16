@@ -49,6 +49,7 @@ struct args {
     bool remove_dups;
     bool process_unmapped;
     bool process_unmapped_done;
+    bool zero_based;
 
     /* Read processing */
     char *prev_chrom_name;

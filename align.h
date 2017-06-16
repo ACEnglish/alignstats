@@ -17,7 +17,7 @@ struct align_metrics {
     uint64_t r_unmapped;
     uint64_t r_soft_clipped;
     uint64_t r_exact_match;
-	uint64_t r_mapq20;
+    uint64_t r_mapq20;
 
     /* Base metrics */
     uint64_t b_total;

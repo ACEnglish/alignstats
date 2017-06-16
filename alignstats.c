@@ -31,7 +31,7 @@
 void usage()
 {
     fprintf(stderr, "Usage: alignstats [-i INPUT] [-j FORMAT] [-o OUTPUT]\n");
-    fprintf(stderr, "                  [-h] [-v] [-n NUMREADS] [-p]\n");
+    fprintf(stderr, "                  [-h] [-v] [-n NUMREADS] [-p] [-z]\n");
     fprintf(stderr, "                  [-r REGIONS] [-t TARGET] [-m COVMASK] [-T REFFASTA]\n");
     fprintf(stderr, "                  [-q INT] [-f INT] [-F INT]\n");
     fprintf(stderr, "                  [-D] [-U] [-A] [-C] [-W]\n");
@@ -57,6 +57,7 @@ void usage()
     fprintf(stderr, "    -m COVMASK  File in BED format listing regions of N bases in reference.\n");
     fprintf(stderr, "                Coverage counts will be suppressed for these regions.\n");
     fprintf(stderr, "    -T REFFASTA Indexed FASTA reference file for CRAM input alignment.\n");
+    fprintf(stderr, "    -z           Translate BED files from 1-based to 0-based format\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Processing options:\n");
     fprintf(stderr, "    -q INT      Only process records with minimum read quality of INT.\n");
@@ -133,7 +134,8 @@ int main(int argc, char **argv)
     args->remove_dups = true;
     args->process_unmapped = true;
     args->process_unmapped_done = false;
-
+    args->zero_based = false;
+    
     args->input_sf = NULL;
     args->output_fp = NULL;
 
@@ -264,6 +266,9 @@ int main(int argc, char **argv)
             break;
         case 't': /* Target filename */
             target_fn = optarg;
+            break;
+        case 'z': /* Translate bed to zero-based */
+            args->zero_based = true;
             break;
         case 'v': /* Verbose runtime information */
             args->verbose = true;
@@ -511,7 +516,7 @@ int main(int argc, char **argv)
         }
 
         args->regions = bed_init();
-        if (load_bed(regions_fp, args->regions, args->hdr) == 0) {
+        if (load_bed(regions_fp, args->regions, args->hdr, args->zero_based) == 0) {
             log_error("No usable regions in regions file.");
             exit_val = EXIT_FAILURE;
             goto end;
@@ -545,7 +550,7 @@ int main(int argc, char **argv)
             log_info("Loading targets...");
         }
 
-        if (load_bed(target_fp, args->ti, args->hdr) == 0) {
+        if (load_bed(target_fp, args->ti, args->hdr, args->zero_based) == 0) {
             log_error("No usable targets in target file.");
             exit_val = EXIT_FAILURE;
             goto end;
@@ -571,7 +576,7 @@ int main(int argc, char **argv)
             log_info("Loading coverage mask targets...");
         }
 
-        if (load_bed(cov_mask_fp, args->cov_mask_ti, args->hdr) == 0) {
+        if (load_bed(cov_mask_fp, args->cov_mask_ti, args->hdr, args->zero_based) == 0) {
             log_warning("No usable targets in coverage mask file.");
             exit_val = EXIT_FAILURE;
             goto end;
