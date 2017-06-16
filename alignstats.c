@@ -555,7 +555,6 @@ int main(int argc, char **argv)
             }
             /* Can't populate targets info until we've got it loaded */
             args->cm = capture_metrics_init(args->ti);
-            args->cm->t_total = args->ti->num_targets;
         }
 
         if (fclose(target_fp) != 0) {

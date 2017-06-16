@@ -1,6 +1,7 @@
 #include "align.h"
 #include "err.h"
 #include "print.h"
+#include "logging.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,7 +57,12 @@ void align_process_record(bam1_t *rec, align_metrics_t *am, bool process_cigar)
         /* Mapped reads */
         ++am->r_mapped;
         am->b_mapped += rec->core.l_qseq;
-
+        
+        /* MAPQ20 reads */
+        if (rec->core.qual >= 20) {
+            ++am->r_mapq20;
+        }
+        
         /* Aligned reads: filter out reads with filtered flags */
         if (!(rec->core.flag & am->filter)) {
             ++am->r_aligned;
@@ -329,7 +335,15 @@ void align_report(report_t *report, align_metrics_t *am, read_type_t rt)
     copy_to_buffer(key_start, "Perfect_Bases_Pct", copy_size);
     print_pct(value_buffer, REPORT_BUFFER_SIZE, am->b_exact_match, am->b_mapped);
     report_add_key_value(report, key_buffer, value_buffer);
-
+    
+    copy_to_buffer(key_start, "MAPQ20_Reads", copy_size);
+    snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", am->r_mapq20);
+    report_add_key_value(report, key_buffer, value_buffer);
+    
+    copy_to_buffer(key_start, "MAPQ20_Reads_Pct", copy_size);
+    print_pct(value_buffer, REPORT_BUFFER_SIZE, am->r_mapq20, am->r_mapped);
+    report_add_key_value(report, key_buffer, value_buffer);
+    
     copy_to_buffer(key_start, "Q20_Bases", copy_size);
     snprintf(value_buffer, REPORT_BUFFER_SIZE, "%lu", am->b_q20);
     report_add_key_value(report, key_buffer, value_buffer);
