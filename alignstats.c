@@ -195,7 +195,7 @@ int main(int argc, char **argv)
     filter_excl = 0;
 
     /* Read parameters */
-    while ((c = getopt(argc, argv, "ACDF:T:UWf:hi:j:m:n:o:pq:r:t:v")) != -1) {
+    while ((c = getopt(argc, argv, "ACDF:T:UWf:hi:j:m:n:o:pq:r:t:vz")) != -1) {
         switch (c) {
         case 'A': /* Turn off alignment stats */
             args->do_alignment = false;
